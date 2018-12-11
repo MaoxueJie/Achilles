@@ -1,4 +1,4 @@
--- 103	Distribution of age at first observation period
+-- 223	Distribution of age at first visit occurrence
 
 --HINT DISTRIBUTE_ON_KEY(count_value)
 with rawData (person_id, age_value) as
@@ -33,7 +33,7 @@ ageStatsPrior (age_value, total, accumulated) as
 ),
 tempResults as
 (
-  select 222 as analysis_id,
+  select 223 as analysis_id,
     o.total as count_value,
   	o.min_value,
   	o.max_value,
@@ -52,6 +52,6 @@ tempResults as
 select analysis_id, 
 cast(null as varchar(255)) as stratum_1, cast(null as varchar(255)) as stratum_2, cast(null as varchar(255)) as stratum_3, cast(null as varchar(255)) as stratum_4, cast(null as varchar(255)) as stratum_5, 
 count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
-into @scratchDatabaseSchema@schemaDelim@tempAchillesPrefix_dist_222
+into @scratchDatabaseSchema@schemaDelim@tempAchillesPrefix_dist_223
 from tempResults
 ;
