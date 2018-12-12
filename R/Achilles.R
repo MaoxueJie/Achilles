@@ -552,6 +552,7 @@ achilles <- function (connectionDetails,
 
     if (numThreads == 1) {
       for (sql in mergeSqls) {
+		ParallelLogger::logInfo(sql);
         DatabaseConnector::executeSql(connection = connection, sql = sql)
       }
     } else {
