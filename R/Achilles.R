@@ -494,6 +494,7 @@ achilles <- function (connectionDetails,
         ParallelLogger::logInfo(sprintf("Analysis %d (%s) -- START", mainSql$analysisId, 
                                         analysisDetails$ANALYSIS_NAME[analysisDetails$ANALYSIS_ID == mainSql$analysisId]))
         tryCatch({
+		  ParallelLogger::logInfo(mainSql$sql)
           DatabaseConnector::executeSql(connection = connection, sql = mainSql$sql)
           ParallelLogger::logInfo(sprintf("Analysis %d -- COMPLETE (%f secs)", mainSql$analysisId, Sys.time() - start))  
         }, error = function(e) {
