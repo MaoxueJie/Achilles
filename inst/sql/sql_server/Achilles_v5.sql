@@ -531,12 +531,12 @@ create table @results_database_schema.ACHILLES_results_dist
 --populate the tables with names of analyses
 
 insert into @results_database_schema.ACHILLES_analysis (analysis_id, analysis_name)
-	values (0, 'Source name');
+	values (0, '数据源');
 
 --000. PERSON statistics
 
 insert into @results_database_schema.ACHILLES_analysis (analysis_id, analysis_name)
-	values (1, 'Number of persons');
+	values (1, '人数');
 
 insert into @results_database_schema.ACHILLES_analysis (analysis_id, analysis_name, stratum_1_name)
 	values (2, 'Number of persons by gender', 'gender_concept_id');
