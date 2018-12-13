@@ -676,7 +676,11 @@ insert into @results_database_schema.ACHILLES_analysis (analysis_id, analysis_na
 insert into @results_database_schema.ACHILLES_analysis (analysis_id, analysis_name, stratum_1_name)
 	values (221, 'Number of persons by visit start year', 'calendar year');
 
+insert into @results_database_schema.ACHILLES_analysis (analysis_id, analysis_name, stratum_1_name)
+	values (222, 'Number of persons by age, with age at first visit', 'age');
 
+insert into @results_database_schema.ACHILLES_analysis (analysis_id, analysis_name)
+	values (223, 'Distribution of age at first visit');
 
 --300- PROVIDER
 insert into @results_database_schema.ACHILLES_analysis (analysis_id, analysis_name)
@@ -2418,7 +2422,17 @@ group by YEAR(visit_start_date)
 --}
 
 
-
+--{222 IN (@list_of_analysis_ids)}?{
+-- 222	Number of persons by visit start year 
+insert into @results_database_schema.ACHILLES_results (analysis_id, stratum_1, count_value)
+select 221 as analysis_id,   
+	CAST(YEAR(visit_start_date) AS VARCHAR(255)) as stratum_1,
+	COUNT_BIG(distinct PERSON_ID) as count_value
+from
+@cdm_database_schema.visit_occurrence vo1
+group by YEAR(visit_start_date)
+;
+--}
 
 
 /********************************************
