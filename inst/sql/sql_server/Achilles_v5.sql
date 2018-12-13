@@ -2423,14 +2423,75 @@ group by YEAR(visit_start_date)
 
 
 --{222 IN (@list_of_analysis_ids)}?{
--- 222	Number of persons by visit start year 
+-- 222	Number of persons by age, with age at first visit occurrence
+--HINT DISTRIBUTE_ON_KEY(stratum_1)
 insert into @results_database_schema.ACHILLES_results (analysis_id, stratum_1, count_value)
-select 221 as analysis_id,   
-	CAST(YEAR(visit_start_date) AS VARCHAR(255)) as stratum_1,
-	COUNT_BIG(distinct PERSON_ID) as count_value
-from
-@cdm_database_schema.visit_occurrence vo1
-group by YEAR(visit_start_date)
+select 222 as analysis_id,   
+	CAST(year(vo1.index_date) - p1.YEAR_OF_BIRTH AS VARCHAR(255)) as stratum_1, 
+	COUNT_BIG(p1.person_id) as count_value
+from @cdm_database_schema.PERSON p1
+	inner join (select person_id, MIN(visit_start_date) as index_date from @cdm_database_schema.VISIT_OCCURRENCE group by PERSON_ID) vo1
+	on p1.PERSON_ID = vo1.PERSON_ID
+group by year(vo1.index_date) - p1.YEAR_OF_BIRTH;
+
+--}
+
+--{223 IN (@list_of_analysis_ids)}?{
+-- 223	Distribution of age at first visit occurrence
+
+--HINT DISTRIBUTE_ON_KEY(count_value)
+with rawData (person_id, age_value) as
+(
+select p.person_id, 
+  MIN(YEAR(visit_start_date)) - P.YEAR_OF_BIRTH as age_value
+  from @cdm_database_schema.PERSON p
+  JOIN @cdm_database_schema.VISIT_OCCURRENCE vo on p.person_id = vo.person_id
+  group by p.person_id, p.year_of_birth
+),
+overallStats (avg_value, stdev_value, min_value, max_value, total) as
+(
+  select CAST(avg(1.0 * age_value) AS FLOAT) as avg_value,
+  CAST(stdev(age_value) AS FLOAT) as stdev_value,
+  min(age_value) as min_value,
+  max(age_value) as max_value,
+  count_big(*) as total
+  FROM rawData
+),
+ageStats (age_value, total, rn) as
+(
+  select age_value, count_big(*) as total, row_number() over (order by age_value) as rn
+  from rawData
+  group by age_value
+),
+ageStatsPrior (age_value, total, accumulated) as
+(
+  select s.age_value, s.total, sum(p.total) as accumulated
+  from ageStats s
+  join ageStats p on p.rn <= s.rn
+  group by s.age_value, s.total, s.rn
+),
+tempResults as
+(
+  select 223 as analysis_id,
+    o.total as count_value,
+  	o.min_value,
+  	o.max_value,
+  	o.avg_value,
+  	o.stdev_value,
+  	MIN(case when p.accumulated >= .50 * o.total then age_value end) as median_value,
+  	MIN(case when p.accumulated >= .10 * o.total then age_value end) as p10_value,
+  	MIN(case when p.accumulated >= .25 * o.total then age_value end) as p25_value,
+  	MIN(case when p.accumulated >= .75 * o.total then age_value end) as p75_value,
+  	MIN(case when p.accumulated >= .90 * o.total then age_value end) as p90_value
+  --INTO #tempResults
+  from ageStatsPrior p
+  CROSS JOIN overallStats o
+  GROUP BY o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
+)
+
+insert into @results_database_schema.ACHILLES_results_dist (analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value)
+select analysis_id, count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
+from tempResults
 ;
 --}
 
