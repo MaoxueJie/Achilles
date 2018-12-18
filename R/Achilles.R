@@ -170,9 +170,9 @@ achilles <- function (connectionDetails,
   
   # Check if cohort table is present ---------------------------------------------------------------------------------------------
   
-  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
   
-  sql <- SqlRender::renderSql("select top 1 * from @resultsDatabaseSchema.cohort", 
+  sql <- SqlRender::renderSql("select top 1 * from @resultsDatabaseSchema.cohort;", 
                               resultsDatabaseSchema = resultsDatabaseSchema)$sql
   sql <- SqlRender::translateSql(sql = sql, targetDialect = connectionDetails$dbms)$sql
   
@@ -214,7 +214,7 @@ achilles <- function (connectionDetails,
     ParallelLogger::logInfo("Beginning single-threaded execution")
     
     # first invocation of the connection, to persist throughout to maintain temp tables
-    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails) 
+    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true") 
   } else if (!requireNamespace("OhdsiRTools", quietly = TRUE)) {
     stop(
       "Multi-threading support requires package 'OhdsiRTools'.",
