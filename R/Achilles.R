@@ -274,7 +274,7 @@ achilles <- function (connectionDetails,
         # connection is already alive
         DatabaseConnector::executeSql(connection = connection, sql = sql)
       } else {
-        connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+        connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
         DatabaseConnector::executeSql(connection = connection, sql = sql)
         DatabaseConnector::disconnect(connection = connection)
       }
@@ -338,7 +338,7 @@ achilles <- function (connectionDetails,
                                              function(rawCostSql) {
                                                start <- Sys.time()
                                                ParallelLogger::logInfo(sprintf("Raw Cost %d: START", rawCostSql$analysisId))
-                                               connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+                                               connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
                                                DatabaseConnector::executeSql(connection = connection, sql = rawCostSql$sql)
                                                DatabaseConnector::disconnect(connection = connection)
                                                ParallelLogger::logInfo(sprintf("Raw Cost %d: COMPLETE (%f seconds)", rawCostSql$analysisId, Sys.time() - start))
@@ -420,7 +420,7 @@ achilles <- function (connectionDetails,
                                            function(distCostAnalysisSql) {
                                              start <- Sys.time()
                                              ParallelLogger::logInfo(sprintf("Cost Analysis %d: START", distCostAnalysisSql$analysisId))
-                                             connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+                                             connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
                                              DatabaseConnector::executeSql(connection = connection, sql = distCostAnalysisSql$sql)
                                              DatabaseConnector::disconnect(connection = connection)
                                              ParallelLogger::logInfo(sprintf("Cost Analysis %d: COMPLETE (%f seconds)", distCostAnalysisSql$analysisId, 
@@ -434,7 +434,7 @@ achilles <- function (connectionDetails,
         dummy <- OhdsiRTools::clusterApply(cluster = cluster, 
                                            x = dropRawCostSqls, 
                                            function(dropRawCostSql) {
-                                             connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+                                             connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
                                              DatabaseConnector::executeSql(connection = connection, sql = dropRawCostSql)
                                              DatabaseConnector::disconnect(connection = connection)
                                            })
@@ -507,7 +507,7 @@ achilles <- function (connectionDetails,
                                          x = mainSqls, 
                                          function(mainSql) {
                                            start <- Sys.time()
-                                           connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+                                           connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
                                            ParallelLogger::logInfo(sprintf("Main Analysis %d (%s) -- START", mainSql$analysisId, 
                                                                            analysisDetails$ANALYSIS_NAME[analysisDetails$ANALYSIS_ID == mainSql$analysisId]))
                                            tryCatch({
@@ -560,7 +560,7 @@ achilles <- function (connectionDetails,
       dummy <- OhdsiRTools::clusterApply(cluster = cluster, 
                                          x = mergeSqls, 
                                          function(sql) {
-                                           connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+                                           connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
                                            DatabaseConnector::executeSql(connection = connection, sql = sql)
                                            DatabaseConnector::disconnect(connection = connection)
                                          })
@@ -757,7 +757,7 @@ createConceptHierarchy <- function(connectionDetails,
     ParallelLogger::logInfo("Executing Concept Hierarchy creation. This could take a while")
 
     if (numThreads == 1) {
-      connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+      connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
       for (sql in hierarchySqls) {
         DatabaseConnector::executeSql(connection = connection, sql = sql)
       }
@@ -768,13 +768,13 @@ createConceptHierarchy <- function(connectionDetails,
       dummy <- OhdsiRTools::clusterApply(cluster = cluster, 
                                          x = hierarchySqls, 
                                          function(sql) {
-                                           connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+                                           connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
                                            DatabaseConnector::executeSql(connection = connection, sql = sql)
                                            DatabaseConnector::disconnect(connection = connection)
                                          })
       OhdsiRTools::stopCluster(cluster = cluster)
       
-      connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+      connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
       DatabaseConnector::executeSql(connection = connection, sql = mergeSql)
       DatabaseConnector::disconnect(connection = connection)
     }
@@ -850,7 +850,7 @@ createIndices <- function(connectionDetails,
                               resultsDatabaseSchema = resultsDatabaseSchema)$sql
   sql <- SqlRender::translateSql(sql = sql, targetDialect = connectionDetails$dbms)$sql
   
-  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
   conceptHierarchyTableExists <- tryCatch({
     DatabaseConnector::querySql(connection = connection, sql = sql)
     TRUE
@@ -880,7 +880,7 @@ createIndices <- function(connectionDetails,
   }
   
   if (!sqlOnly) {
-    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
     
     try(DatabaseConnector::executeSql(connection = connection, sql = paste(dropIndicesSql, collapse = "\n\n")), silent = TRUE)
     DatabaseConnector::executeSql(connection = connection, 
@@ -957,7 +957,7 @@ validateSchema <- function(connectionDetails,
   if (sqlOnly) {
     SqlRender::writeSql(sql = sql, targetFile = file.path(outputFolder, "ValidateSchema.sql")) 
   } else {
-    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
     tables <- DatabaseConnector::querySql(connection = connection, sql = sql)
     ParallelLogger::logInfo("CDM Schema is valid")
     DatabaseConnector::disconnect(connection = connection)
@@ -1027,7 +1027,7 @@ dropAllScratchTables <- function(connectionDetails,
                                          appenders = appenders)
   ParallelLogger::registerLogger(logger) 
   
-  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
   
   if ("achilles" %in% tableTypes) {
   
@@ -1054,7 +1054,7 @@ dropAllScratchTables <- function(connectionDetails,
     dummy <- OhdsiRTools::clusterApply(cluster = cluster, 
                                        x = dropSqls, 
                                        function(sql) {
-                                         connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+                                         connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
                                          tryCatch({
                                            DatabaseConnector::executeSql(connection = connection, sql = sql)  
                                          }, error = function(e) {
@@ -1092,7 +1092,7 @@ dropAllScratchTables <- function(connectionDetails,
     dummy <- OhdsiRTools::clusterApply(cluster = cluster, 
                                        x = dropSqls, 
                                        function(sql) {
-                                         connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+                                         connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
                                          tryCatch({
                                            DatabaseConnector::executeSql(connection = connection, sql = sql)  
                                          }, error = function(e) {
@@ -1130,7 +1130,7 @@ dropAllScratchTables <- function(connectionDetails,
     dummy <- OhdsiRTools::clusterApply(cluster = cluster, 
                                        x = dropSqls, 
                                        function(sql) {
-                                         connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+                                         connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
                                          tryCatch({
                                            DatabaseConnector::executeSql(connection = connection, sql = sql)  
                                          }, error = function(e) {
@@ -1151,7 +1151,7 @@ dropAllScratchTables <- function(connectionDetails,
   sql <- SqlRender::renderSql(sql = "select cdm_version from @cdmDatabaseSchema.cdm_source",
                               cdmDatabaseSchema = cdmDatabaseSchema)$sql
   sql <- SqlRender::translateSql(sql = sql, targetDialect = connectionDetails$dbms)$sql
-  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
   cdmVersion <- tryCatch({
     c <- tolower((DatabaseConnector::querySql(connection = connection, sql = sql))[1,])
     gsub(pattern = "v", replacement = "", x = c)
@@ -1242,7 +1242,7 @@ dropAllScratchTables <- function(connectionDetails,
   sql <- SqlRender::renderSql(sql = "select cdm_source_name from @cdmDatabaseSchema.cdm_source",
                               cdmDatabaseSchema = cdmDatabaseSchema)$sql
   sql <- SqlRender::translateSql(sql = sql, targetDialect = connectionDetails$dbms)$sql
-  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
   sourceName <- tryCatch({
     s <- DatabaseConnector::querySql(connection = connection, sql = sql)
     s[1,]
@@ -1267,7 +1267,7 @@ dropAllScratchTables <- function(connectionDetails,
                                 resultsDatabaseSchema = resultsDatabaseSchema,
                                 analysisIds = paste(resultIds, collapse = ","))$sql  
     sql <- SqlRender::translateSql(sql = sql, targetDialect = connectionDetails$dbms)$sql
-    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
     DatabaseConnector::executeSql(connection = connection, sql = sql)
     DatabaseConnector::disconnect(connection = connection)
   }
@@ -1277,7 +1277,7 @@ dropAllScratchTables <- function(connectionDetails,
                                 resultsDatabaseSchema = resultsDatabaseSchema,
                                 analysisIds = paste(distIds, collapse = ","))$sql
     sql <- SqlRender::translateSql(sql = sql, targetDialect = connectionDetails$dbms)$sql
-    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
     DatabaseConnector::executeSql(connection = connection, sql = sql)
     DatabaseConnector::disconnect(connection = connection)
   }
