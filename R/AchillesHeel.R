@@ -131,7 +131,7 @@ achillesHeel <- function(connectionDetails,
     schemaDelim <- "s_"
     ParallelLogger::logInfo("Beginning single-threaded execution")
     # first invocation of the connection, to persist throughout to maintain temp tables
-    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails) 
+    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true") 
   } else if (!requireNamespace("OhdsiRTools", quietly = TRUE)) {
     stop(
       "Multi-threading support requires package 'OhdsiRTools'.",
@@ -202,7 +202,7 @@ achillesHeel <- function(connectionDetails,
       dummy <- OhdsiRTools::clusterApply(cluster = cluster, 
                                          x = parallelSqls, 
                                          function(sql) {
-                                           connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+                                           connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
                                            DatabaseConnector::executeSql(connection = connection, sql = sql)
                                            DatabaseConnector::disconnect(connection = connection)
                                          })
@@ -265,7 +265,7 @@ achillesHeel <- function(connectionDetails,
   
   if (!sqlOnly) {
     if (numThreads > 1) {
-      connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+      connection <- DatabaseConnector::connect(connectionDetails = connectionDetails,extraSettings="tcpKeepAlive=true")
     }
     for (sql in c(derivedSql, resultSql)) {
       DatabaseConnector::executeSql(connection = connection, sql = sql)
