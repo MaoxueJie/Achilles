@@ -552,7 +552,7 @@ achilles <- function (connectionDetails,
 
     if (numThreads == 1) {
       for (sql in mergeSqls) {
-		ParallelLogger::logInfo(sql);
+		#-------------------------------ParallelLogger::logInfo(sql);
         DatabaseConnector::executeSql(connection = connection, sql = sql)
       }
     } else {
@@ -628,6 +628,7 @@ achilles <- function (connectionDetails,
     heelResults <- achillesHeel(connectionDetails = connectionDetails,
                                 cdmDatabaseSchema = cdmDatabaseSchema,
                                 resultsDatabaseSchema = resultsDatabaseSchema,
+								vocabDatabaseSchema = vocabDatabaseSchema,
                                 scratchDatabaseSchema = scratchDatabaseSchema,
                                 cdmVersion = cdmVersion,
                                 sqlOnly = sqlOnly,
